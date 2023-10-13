@@ -1,5 +1,7 @@
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextCharacter;
+import com.googlecode.lanterna.input.KeyStroke;
+import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
@@ -10,6 +12,8 @@ import java.io.IOException;
 public class Game {
 
     private Screen screen; // atributo screen
+
+    private Hero hero; // hero field
 
     public Game() {
         try {
@@ -24,20 +28,17 @@ public class Game {
             screen.startScreen(); // screens must be started
             screen.doResizeIfNecessary(); // resize screen if necessary
 
-            //code that paints the screen
-            screen.clear();
-            screen.setCharacter(10, 10, TextCharacter.fromCharacter('X')[0]);
-            screen.refresh();
+            hero = new Hero(10, 10);
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void draw(){
 
+    private void draw(){
         screen.clear();
-        screen.setCharacter(10, 10, TextCharacter.fromCharacter('X')[0]);
+        hero.draw(screen);
         try {
             screen.refresh();
         } catch (IOException e) {
@@ -45,7 +46,44 @@ public class Game {
         }
     }
 
-    public void run() {
-        this.draw();
+    private void processKey(KeyStroke key) {
+        System.out.println(key);
+        switch (key.getKeyType()) {
+            case ArrowUp:
+                hero.moveUp();
+                break;
+            case ArrowDown:
+                hero.moveDown();
+                break;
+            case ArrowLeft:
+                hero.moveLeft();
+                break;
+            case ArrowRight:
+                hero.moveRight();
+                break;
+        }
     }
+
+    public void run() {
+        while (true){
+            this.draw();
+            try {
+                KeyStroke key = screen.readInput();
+                this.processKey(key);
+
+                if (key.getKeyType() == KeyType.Character && key.getCharacter() == ('q')){
+                    screen.close();
+                }
+
+                if (key.getKeyType() == KeyType.EOF){
+                    break;
+                }
+
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
 }

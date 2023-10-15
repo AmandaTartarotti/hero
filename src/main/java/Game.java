@@ -11,10 +11,6 @@ import java.io.IOException;
 
 public class Game {
 
-    private Screen screen; // atributo screen
-
-    private Hero hero; // hero field
-
     public Game() {
         try {
             TerminalSize terminalSize = new TerminalSize(40, 20);
@@ -28,62 +24,40 @@ public class Game {
             screen.startScreen(); // screens must be started
             screen.doResizeIfNecessary(); // resize screen if necessary
 
-            hero = new Hero(10, 10);
-
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-
-    private void draw(){
+    private void draw() throws IOException {
         screen.clear();
-        hero.draw(screen);
-        try {
-            screen.refresh();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        arena.draw(screen.newTextGraphics());
+        screen.refresh();
     }
 
     private void processKey(KeyStroke key) {
-        System.out.println(key);
-        switch (key.getKeyType()) {
-            case ArrowUp:
-                hero.moveUp();
-                break;
-            case ArrowDown:
-                hero.moveDown();
-                break;
-            case ArrowLeft:
-                hero.moveLeft();
-                break;
-            case ArrowRight:
-                hero.moveRight();
-                break;
-        }
+        arena.processKey(key);
     }
 
     public void run() {
-        while (true){
-            this.draw();
-            try {
+        try {
+            while (true) {
+                draw();
                 KeyStroke key = screen.readInput();
-                this.processKey(key);
-
-                if (key.getKeyType() == KeyType.Character && key.getCharacter() == ('q')){
+                processKey(key);
+                if (key.getKeyType() == KeyType.Character && key.getCharacter() == ('q'))
                     screen.close();
-                }
-
-                if (key.getKeyType() == KeyType.EOF){
+                if (key.getKeyType() == KeyType.EOF)
                     break;
-                }
 
-
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
         }
+        catch (IOException e) {
+                throw new RuntimeException(e);
+        }
     }
+
+    private Screen screen; // atributo screen
+    private Arena arena; // arena(hero) field
 
 }

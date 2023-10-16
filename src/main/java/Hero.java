@@ -4,7 +4,7 @@ import com.googlecode.lanterna.screen.Screen;
 import java.io.IOException;
 
 public class Hero {
-    private Position position;
+    private Position position = new Position(10,10);
     private int x;
     private int y;
 

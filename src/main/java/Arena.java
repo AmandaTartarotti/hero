@@ -8,6 +8,11 @@ import com.googlecode.lanterna.screen.Screen;
 
 public class Arena {
 
+    private Screen screen;
+    // TextGraphics graphics = screen.newTextGraphics();
+    private Hero hero = new Hero(10, 10);
+    private Position position = new Position(10,10);
+
     private int width; // width
     private int height; // height;
 
@@ -15,7 +20,6 @@ public class Arena {
     public Arena(int width, int height) {
         this.height = height;
         this.width = width;
-        hero = new Hero(10, 10);
     }
 
     //Getters
@@ -33,9 +37,9 @@ public class Arena {
     }
 
     public Position moveUp() { return new Position(position.getX(), position.getY() - 1);}
-    public Position moveDown(){ return new Position(position.getX(), position.getY() + 1);}
-    public Position moveLeft(){ return new Position(position.getX() - 1, position.getY());}
-    public Position moveRigth(){ return new Position(position.getX() + 1, position.getY());}
+    public Position moveDown() { return new Position(position.getX(), position.getY() + 1);}
+    public Position moveLeft() { return new Position(position.getX() - 1, position.getY());}
+    public Position moveRight() { return new Position(position.getX() + 1, position.getY());}
 
     public void moveHero(Position position)
     {
@@ -49,11 +53,12 @@ public class Arena {
                 (position.getY() >= 0 && position.getY() < height);
     }
 
-    public void processKey(KeyStroke key) {
+    void processKey(KeyStroke key) {
         System.out.println(key);
         switch (key.getKeyType()) {
             case ArrowUp:
                 moveUp();
+                System.out.println(position.getY());
                 break;
             case ArrowDown:
                 moveDown();
@@ -62,14 +67,9 @@ public class Arena {
                 moveLeft();
                 break;
             case ArrowRight:
-                moveRigth();
+                moveRight();
                 break;
         }
     }
-
-    private Screen screen;
-    TextGraphics graphics = screen.newTextGraphics();
-    private Hero hero;
-    private Position position;
 }
 

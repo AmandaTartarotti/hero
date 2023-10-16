@@ -11,7 +11,11 @@ import java.io.IOException;
 
 public class Game {
 
+    private Screen screen;// atributo screen
+    private Arena arena = new Arena(10,10); // arena(hero) field
+
     public Game() {
+
         try {
             TerminalSize terminalSize = new TerminalSize(40, 20);
             DefaultTerminalFactory terminalFactory = new
@@ -57,7 +61,5 @@ public class Game {
         }
     }
 
-    private Screen screen; // atributo screen
-    private Arena arena; // arena(hero) field
 
 }

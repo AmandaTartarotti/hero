@@ -13,6 +13,7 @@ public class Game {
 
     private Screen screen;// atributo screen
     private Arena arena = new Arena(10,10); // arena(hero) field
+    private Position position = new Position(10,10);
 
     public Game() {
 

@@ -10,16 +10,16 @@ public class Arena {
 
     private Screen screen;
     // TextGraphics graphics = screen.newTextGraphics();
-    private Hero hero = new Hero(10, 10);
-    private Position position = new Position(10,10);
+    Hero hero = new Hero(10, 10);
+    Position position = new Position(10, 10);
 
     private int width; // width
     private int height; // height;
 
     // Constructor
     public Arena(int width, int height) {
-        this.height = height;
         this.width = width;
+        this.height = height;
     }
 
     //Getters
@@ -43,12 +43,18 @@ public class Arena {
 
     public void moveHero(Position position)
     {
-        if (canHeroMove(position))
+        if (canHeroMove(position)) {
+            System.out.println("entrei");
             hero.setPosition(position);
+        }
     }
 
     public boolean canHeroMove(Position position)
     {
+        System.out.println("quase lá, o x é:");
+        System.out.println(position.getX());
+        System.out.println("e o y é:");
+        System.out.println(position.getY());
         return (position.getX() >= 0 && position.getX() < width) &&
                 (position.getY() >= 0 && position.getY() < height);
     }
@@ -57,17 +63,20 @@ public class Arena {
         System.out.println(key);
         switch (key.getKeyType()) {
             case ArrowUp:
-                moveUp();
                 System.out.println(position.getY());
+                moveHero(moveUp());
                 break;
             case ArrowDown:
-                moveDown();
+                System.out.println(position.getY());
+                moveHero(moveDown());
                 break;
             case ArrowLeft:
-                moveLeft();
+                System.out.println(position.getX());
+                moveHero(moveLeft());
                 break;
             case ArrowRight:
-                moveRight();
+                System.out.println(position.getX());
+                moveHero(moveRight());
                 break;
         }
     }

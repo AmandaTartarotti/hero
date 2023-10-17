@@ -1,6 +1,6 @@
 public class Position {
-    private int x;
-    private int y;
+    private int x; // width
+    private int y; //height
 
     public Position(int x, int y){
         this.x = x;

@@ -33,13 +33,10 @@ public class Arena {
     public void draw(TextGraphics graphics) {
         graphics.setForegroundColor(TextColor.Factory.fromString("#FFFF33"));
         graphics.enableModifiers(SGR.BOLD);
-        graphics.putString(new TerminalPosition(position.getX(), position.getY()), "X");
+        graphics.putString(new TerminalPosition(hero.getPosition().getX(), hero.getPosition().getY()), "X");
     }
 
-    public Position moveUp() { return new Position(position.getX(), position.getY() - 1);}
-    public Position moveDown() { return new Position(position.getX(), position.getY() + 1);}
-    public Position moveLeft() { return new Position(position.getX() - 1, position.getY());}
-    public Position moveRight() { return new Position(position.getX() + 1, position.getY());}
+   
 
     public void moveHero(Position position)
     {
@@ -51,10 +48,6 @@ public class Arena {
 
     public boolean canHeroMove(Position position)
     {
-        System.out.println("quase lá, o x é:");
-        System.out.println(position.getX());
-        System.out.println("e o y é:");
-        System.out.println(position.getY());
         return (position.getX() >= 0 && position.getX() < width) &&
                 (position.getY() >= 0 && position.getY() < height);
     }
@@ -63,20 +56,16 @@ public class Arena {
         System.out.println(key);
         switch (key.getKeyType()) {
             case ArrowUp:
-                System.out.println(position.getY());
-                moveHero(moveUp());
+                moveHero(hero.moveUp());
                 break;
             case ArrowDown:
-                System.out.println(position.getY());
-                moveHero(moveDown());
+                moveHero(hero.moveDown());
                 break;
             case ArrowLeft:
-                System.out.println(position.getX());
-                moveHero(moveLeft());
+                moveHero(hero.moveLeft());
                 break;
             case ArrowRight:
-                System.out.println(position.getX());
-                moveHero(moveRight());
+                moveHero(hero.moveRight());
                 break;
         }
     }

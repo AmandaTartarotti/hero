@@ -12,11 +12,11 @@ import java.util.Random;
 
 public class Arena {
 
-    private Screen screen;
+    Screen screen;
     Hero hero = new Hero(10, 10);
-    private List<Wall> walls;
-    private List<Coin> coins;
-    private List<Monster> monsters;
+    List<Wall> walls;
+    List<Coin> coins;
+    List<Monster> monsters;
 
     private int width; // width
     private int height; // height;

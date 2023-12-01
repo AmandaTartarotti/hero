@@ -1,6 +1,9 @@
+import com.googlecode.lanterna.input.KeyStroke;
+import com.googlecode.lanterna.input.KeyType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 public class ArenaTest {
 
@@ -40,6 +43,15 @@ public class ArenaTest {
         assertTrue(arena.coins.contains(coin));
         //arena.retrieveCoins();
         assertFalse(arena.coins.contains(coin));
+    }
+
+    @Test
+    void testProcessKey() {
+        KeyStroke keyStroke = mock(KeyStroke.class);
+        when(keyStroke.getKeyType()).thenReturn(KeyType.ArrowUp);
+
+        arena.processKey(keyStroke);
+        verify(keyStroke, times(1)).getKeyType();
     }
 }
 

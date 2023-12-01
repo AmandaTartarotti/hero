@@ -1,5 +1,3 @@
-package ModelController;
-
 public class Position {
     private int x; // width
     private int y; //height
@@ -39,7 +37,6 @@ public class Position {
         }
     }
 
-    //Getters
     public int getX(){ return x;}
     public int getY(){ return y;}
 

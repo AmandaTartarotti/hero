@@ -1,6 +1,7 @@
-package ModelController;
-
-import ModelController.*;
+import com.googlecode.lanterna.SGR;
+import com.googlecode.lanterna.TerminalPosition;
+import com.googlecode.lanterna.TextCharacter;
+import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.screen.Screen;
@@ -11,6 +12,7 @@ import java.util.Random;
 
 public class Arena {
 
+    private Screen screen;
     Hero hero = new Hero(10, 10);
     private List<Wall> walls;
     private List<Coin> coins;
@@ -26,46 +28,6 @@ public class Arena {
         this.walls = createWalls();
         this.coins = createCoins();
         this.monsters = createMonsters();
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public Hero getHero() {
-        return hero;
-    }
-
-    public void setHero(Hero hero) {
-        this.hero = hero;
-    }
-
-    public List<Monster> getMonsters() {
-        return monsters;
-    }
-
-    public void setMonsters(List<Monster> monsters) {
-        this.monsters = monsters;
-    }
-
-    public List<Wall> getWalls() {
-        return walls;
-    }
-
-    public void setWalls(List<Wall> walls) {
-        this.walls = walls;
-    }
-
-    public List<Coin> getCoin() {
-        return coins;
-    }
-
-    public void setCoin(List<Coin> coins) {
-        this.coins = coins;
     }
 
     private List<Wall> createWalls() {
@@ -136,20 +98,14 @@ public class Arena {
                 (position.getY() >= 1 && position.getY() < (height - 1));
     }
 
-    public boolean isEmpty(Position position) {
-        for (Wall wall : walls)
-            if (wall.getPosition().equals(position))
-                return false;
-        return true;
+
+    public int getHeight() {
+        return height;
     }
 
-    public boolean isMonster(Position position) {
-        for (Monster monster : monsters)
-            if (monster.getPosition().equals(position))
-                return true;
-        return false;
+    public int getWidth() {
+        return width;
     }
-
 
     public void moveMonsters(){
         for(Monster monster : monsters){

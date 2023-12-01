@@ -1,6 +1,5 @@
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import ModelController.Position;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 

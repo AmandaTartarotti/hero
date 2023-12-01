@@ -1,46 +1,78 @@
-import Gui.lanternaGui;
-import State.State;
-import java.awt.*;
-import java.io.IOException;
-import java.net.URISyntaxException;
 
+import com.googlecode.lanterna.TerminalSize;
+import com.googlecode.lanterna.TextCharacter;
+import com.googlecode.lanterna.input.KeyStroke;
+import com.googlecode.lanterna.input.KeyType;
+import com.googlecode.lanterna.screen.Screen;
+import com.googlecode.lanterna.screen.TerminalScreen;
+import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
+import com.googlecode.lanterna.terminal.Terminal;
+
+import java.io.IOException;
 
 public class Game {
 
-    private lanternaGui gui;
-    private State state;
+    private Screen screen;// atributo screen
+    private Arena arena = new Arena(40,20); // arena(hero) field
+    private Position position = new Position(10,10);
 
-    public Game() throws IOException {
-        this.gui = new lanternaGui(20, 20);
+    public Game() {
+
+        try {
+            TerminalSize terminalSize = new TerminalSize(40, 20);
+            DefaultTerminalFactory terminalFactory = new
+                    DefaultTerminalFactory()
+                    .setInitialTerminalSize(terminalSize);
+            Terminal terminal = terminalFactory.createTerminal();
+
+            screen = new TerminalScreen(terminal);
+            screen.setCursorPosition(null); // we don't need a cursor
+            screen.startScreen(); // screens must be started
+            screen.doResizeIfNecessary(); // resize screen if necessary
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public static void main(String[] args) throws IOException, FontFormatException, URISyntaxException {
-        new Game().start();
+    private void draw() throws IOException {
+        screen.clear();
+        arena.draw(screen.newTextGraphics());
+        screen.refresh();
     }
 
-    public void setState(State state) {
-        this.state = state;
+    private void processKey(KeyStroke key) {
+        arena.processKey(key);
     }
 
-    private void start() throws IOException {
-        int FPS = 10;
-        int frameTime = 1000 / FPS;
+    public void run() {
+        try {
+            while (true) {
+                draw();
+                KeyStroke key = screen.readInput();
+                processKey(key);
 
-        while (this.state != null) {
-            long startTime = System.currentTimeMillis();
+                if (arena.verifyMonsterCollisions()) {
+                    screen.close();
+                    break;
+                }
 
-            state.step(this, gui, startTime);
+                if (key.getKeyType() == KeyType.Character && key.getCharacter() == ('q'))
+                    screen.close();
+                if (key.getKeyType() == KeyType.EOF)
+                    break;
 
-            long elapsedTime = System.currentTimeMillis() - startTime;
-            long sleepTime = frameTime - elapsedTime;
-
-            try {
-                if (sleepTime > 0) Thread.sleep(sleepTime);
-            } catch (InterruptedException e) {
+                arena.moveMonsters();
+                if(arena.verifyMonsterCollisions()){
+                    screen.close();
+                    break;
+                }
             }
         }
-
-        gui.close();
+        catch (IOException e) {
+                throw new RuntimeException(e);
+        }
     }
+
 
 }

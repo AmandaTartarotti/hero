@@ -1,0 +1,518 @@
+[33mcommit cb587ef83f77b61ed43f65090be64b746a7f8f5f[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+Author: AmandaTartarotti <amandatartarotti@gmail.com>
+Date:   Thu Nov 30 20:39:15 2023 -0400
+
+    Adapting Hero
+
+[1mdiff --git a/.jqwik-database b/.jqwik-database[m
+[1mnew file mode 100644[m
+[1mindex 0000000..504bbd4[m
+Binary files /dev/null and b/.jqwik-database differ
+[1mdiff --git a/build.gradle b/build.gradle[m
+[1mindex 200229e..552b195 100644[m
+[1m--- a/build.gradle[m
+[1m+++ b/build.gradle[m
+[36m@@ -1,6 +1,7 @@[m
+ plugins {[m
+     id 'java'[m
+     id 'application'[m
+[32m+[m[32m    id 'info.solidsoft.pitest' version '1.6.0'[m[41m[m
+ }[m
+ [m
+ application {[m
+[36m@@ -14,12 +15,22 @@[m [mrepositories {[m
+     mavenCentral()[m
+ }[m
+ [m
+[32m+[m[32mpitest {[m[41m[m
+[32m+[m[32m    junit5PluginVersion = '0.12'[m[41m[m
+[32m+[m[32m}[m[41m[m
+[32m+[m[41m[m
+ dependencies {[m
+     testImplementation platform('org.junit:junit-bom:5.9.1')[m
+     testImplementation 'org.junit.jupiter:junit-jupiter'[m
+     implementation group: 'com.googlecode.lanterna', name: 'lanterna', version: '3.1.1'[m
+[32m+[m[41m[m
+[32m+[m[32m    testImplementation 'org.mockito:mockito-core:3.7.7'[m[41m[m
+[32m+[m[32m    testImplementation 'net.jqwik:jqwik:1.5.1'[m[41m[m
+[32m+[m[41m[m
+ }[m
+ [m
+ test {[m
+[31m-    useJUnitPlatform()[m
+[32m+[m[32m    useJUnitPlatform {[m[41m[m
+[32m+[m[32m        includeEngines('junit-jupiter', 'jqwik')[m[41m[m
+[32m+[m[32m    }[m[41m[m
+ }[m
+[1mdiff --git a/src/main/java/Application.java b/src/main/java/Application.java[m
+[1mindex 04f74eb..4ef5c8b 100644[m
+[1m--- a/src/main/java/Application.java[m
+[1m+++ b/src/main/java/Application.java[m
+[36m@@ -1,11 +1,4 @@[m
+[31m-import com.googlecode.lanterna.TerminalSize;[m
+[31m-import com.googlecode.lanterna.TextCharacter;[m
+[31m-import com.googlecode.lanterna.screen.Screen;[m
+[31m-import com.googlecode.lanterna.screen.TerminalScreen;[m
+[31m-import com.googlecode.lanterna.terminal.DefaultTerminalFactory;[m
+[31m-import com.googlecode.lanterna.terminal.Terminal;[m
+[31m-[m
+[31m-import java.io.IOException;[m
+[32m+[m[32mimport ModelController.Game;[m[41m[m
+ [m
+ public class Application {[m
+     public static void main(String[] args) {[m
+[1mdiff --git a/src/main/java/Gui/GUI.java b/src/main/java/Gui/GUI.java[m
+[1mnew file mode 100644[m
+[1mindex 0000000..dd364a6[m
+[1m--- /dev/null[m
+[1m+++ b/src/main/java/Gui/GUI.java[m
+[36m@@ -0,0 +1,25 @@[m
+[32m+[m[32mpackage Gui;[m
+[32m+[m[32mimport ModelController.Position;[m
+[32m+[m
+[32m+[m[32mimport java.io.IOException;[m
+[32m+[m
+[32m+[m[32mpublic interface GUI {[m
+[32m+[m
+[32m+[m[32m    void drawHero(Position position);[m
+[32m+[m
+[32m+[m[32m    void drawWall(Position position);[m
+[32m+[m
+[32m+[m[32m    void drawMonster(Position position);[m
+[32m+[m
+[32m+[m[32m    void drawCoin(Position position);[m
+[32m+[m
+[32m+[m[32m    void clear();[m
+[32m+[m
+[32m+[m[32m    void refresh() throws IOException;[m
+[32m+[m
+[32m+[m[32m    void close() throws IOException;[m
+[32m+[m
+[32m+[m[32m    enum ACTION {UP, RIGHT, DOWN, LEFT, NONE, QUIT, SELECT}[m
+[32m+[m
+[32m+[m[32m    ACTION getNextAction() throws IOException;[m
+[32m+[m[32m}[m
+[1mdiff --git a/src/main/java/Gui/lanternaGui.java b/src/main/java/Gui/lanternaGui.java[m
+[1mnew file mode 100644[m
+[1mindex 0000000..da3cf6e[m
+[1m--- /dev/null[m
+[1m+++ b/src/main/java/Gui/lanternaGui.java[m
+[36m@@ -0,0 +1,104 @@[m
+[32m+[m[32mpackage Gui;[m
+[32m+[m[32mimport ModelController.Position;[m
+[32m+[m
+[32m+[m[32mimport java.io.IOException;[m
+[32m+[m
+[32m+[m[32mimport com.googlecode.lanterna.TerminalSize;[m
+[32m+[m[32mimport com.googlecode.lanterna.TextColor;[m
+[32m+[m[32mimport com.googlecode.lanterna.graphics.TextGraphics;[m
+[32m+[m[32mimport com.googlecode.lanterna.input.KeyStroke;[m
+[32m+[m[32mimport com.googlecode.lanterna.input.KeyType;[m
+[32m+[m[32mimport com.googlecode.lanterna.screen.Screen;[m
+[32m+[m[32mimport com.googlecode.lanterna.screen.TerminalScreen;[m
+[32m+[m[32mimport com.googlecode.lanterna.terminal.DefaultTerminalFactory;[m
+[32m+[m[32mimport com.googlecode.lanterna.terminal.Terminal;[m
+[32m+[m
+[32m+[m[32mpublic class lanternaGui implements GUI {[m
+[32m+[m
+[32m+[m[32m    private Screen screen;[m
+[32m+[m
+[32m+[m[32m    public lanternaGui(Screen screen) {[m
+[32m+[m[32m        this.screen = screen;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public void LanternaGUI(int width, int height) throws IOException{[m
+[32m+[m[32m        Terminal terminal = createTerminal(width, height);[m
+[32m+[m[32m        this.screen = createScreen(terminal);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    private Screen createScreen(Terminal terminal) throws IOException {[m
+[32m+[m[32m        final Screen screen;[m
+[32m+[m[32m        screen = new TerminalScreen(terminal);[m
+[32m+[m
+[32m+[m[32m        screen.setCursorPosition(null);[m
+[32m+[m[32m        screen.startScreen();[m
+[32m+[m[32m        screen.doResizeIfNecessary();[m
+[32m+[m[32m        return screen;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    private Terminal createTerminal(int width, int height) throws IOException {[m
+[32m+[m[32m        TerminalSize terminalSize = new TerminalSize(width, height + 1);[m
+[32m+[m[32m        DefaultTerminalFactory terminalFactory = new DefaultTerminalFactory()[m
+[32m+[m[32m                .setInitialTerminalSize(terminalSize);[m
+[32m+[m
+[32m+[m[32m        Terminal terminal = terminalFactory.createTerminal();[m
+[32m+[m[32m        return terminal;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public ACTION getNextAction() throws IOException {[m
+[32m+[m[32m        KeyStroke keyStroke = screen.pollInput();[m
+[32m+[m[32m        if (keyStroke == null) return ACTION.NONE;[m
+[32m+[m
+[32m+[m[32m        if (keyStroke.getKeyType() == KeyType.EOF) return ACTION.QUIT;[m
+[32m+[m[32m        if (keyStroke.getKeyType() == KeyType.Character && keyStroke.getCharacter() == 'q') return ACTION.QUIT;[m
+[32m+[m
+[32m+[m[32m        if (keyStroke.getKeyType() == KeyType.ArrowUp) return ACTION.UP;[m
+[32m+[m[32m        if (keyStroke.getKeyType() == KeyType.ArrowRight) return ACTION.RIGHT;[m
+[32m+[m[32m        if (keyStroke.getKeyType() == KeyType.ArrowDown) return ACTION.DOWN;[m
+[32m+[m[32m        if (keyStroke.getKeyType() == KeyType.ArrowLeft) return ACTION.LEFT;[m
+[32m+[m
+[32m+[m[32m        if (keyStroke.getKeyType() == KeyType.Enter) return ACTION.SELECT;[m
+[32m+[m
+[32m+[m[32m        return ACTION.NONE;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m
+[32m+[m[32m    private void drawCharacter(int x, int y, char c, String color) {[m
+[32m+[m[32m        TextGraphics tg = screen.newTextGraphics();[m
+[32m+[m[32m        tg.setForegroundColor(TextColor.Factory.fromString(color));[m
+[32m+[m[32m        tg.putString(x, y + 1, "" + c);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public void drawHero(Position position) {[m
+[32m+[m[32m        drawCharacter(position.getX(), position.getY(), 'H', "#FFD700");[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public void drawWall(Position position) {[m
+[32m+[m[32m        drawCharacter(position.getX(), position.getY(), '#', "#3333FF");[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public void drawMonster(Position position) {[m
+[32m+[m[32m        drawCharacter(position.getX(), position.getY(), '@', "#CC0000");[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public void drawCoin(Position position) {drawCharacter(position.getX(), position.getY(), '@', "#CC0000");}[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public void clear() {[m
+[32m+[m[32m        screen.clear();[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public void refresh() throws IOException {[m
+[32m+[m[32m        screen.refresh();[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public void close() throws IOException {[m
+[32m+[m[32m        screen.close();[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[1mdiff --git a/src/main/java/Arena.java b/src/main/java/ModelController/Arena.java[m
+[1msimilarity index 85%[m
+[1mrename from src/main/java/Arena.java[m
+[1mrename to src/main/java/ModelController/Arena.java[m
+[1mindex 5c9a3fa..923acaa 100644[m
+[1m--- a/src/main/java/Arena.java[m
+[1m+++ b/src/main/java/ModelController/Arena.java[m
+[36m@@ -1,7 +1,6 @@[m
+[31m-import com.googlecode.lanterna.SGR;[m
+[31m-import com.googlecode.lanterna.TerminalPosition;[m
+[31m-import com.googlecode.lanterna.TextCharacter;[m
+[31m-import com.googlecode.lanterna.TextColor;[m
+[32m+[m[32mpackage ModelController;[m
+[32m+[m
+[32m+[m[32mimport ModelController.*;[m
+ import com.googlecode.lanterna.graphics.TextGraphics;[m
+ import com.googlecode.lanterna.input.KeyStroke;[m
+ import com.googlecode.lanterna.screen.Screen;[m
+[36m@@ -12,7 +11,6 @@[m [mimport java.util.Random;[m
+ [m
+ public class Arena {[m
+ [m
+[31m-    private Screen screen;[m
+     Hero hero = new Hero(10, 10);[m
+     private List<Wall> walls;[m
+     private List<Coin> coins;[m
+[36m@@ -30,6 +28,46 @@[m [mpublic class Arena {[m
+         this.monsters = createMonsters();[m
+     }[m
+ [m
+[32m+[m[32m    public int getHeight() {[m
+[32m+[m[32m        return height;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public int getWidth() {[m
+[32m+[m[32m        return width;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public Hero getHero() {[m
+[32m+[m[32m        return hero;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public void setHero(Hero hero) {[m
+[32m+[m[32m        this.hero = hero;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public List<Monster> getMonsters() {[m
+[32m+[m[32m        return monsters;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public void setMonsters(List<Monster> monsters) {[m
+[32m+[m[32m        this.monsters = monsters;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public List<Wall> getWalls() {[m
+[32m+[m[32m        return walls;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public void setWalls(List<Wall> walls) {[m
+[32m+[m[32m        this.walls = walls;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public List<Coin> getCoin() {[m
+[32m+[m[32m        return coins;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public void setCoin(List<Coin> coins) {[m
+[32m+[m[32m        this.coins = coins;[m
+[32m+[m[32m    }[m
+[32m+[m
+     private List<Wall> createWalls() {[m
+         List<Wall> walls = new ArrayList<>();[m
+         for (int c = 0; c < width; c++) {[m
+[36m@@ -98,13 +136,7 @@[m [mpublic class Arena {[m
+                 (position.getY() >= 1 && position.getY() < (height - 1));[m
+     }[m
+ [m
+[31m-    public int getHeight() {[m
+[31m-        return height;[m
+[31m-    }[m
+ [m
+[31m-    public int getWidth() {[m
+[31m-        return width;[m
+[31m-    }[m
+ [m
+     public void moveMonsters(){[m
+         for(Monster monster : monsters){[m
+[1mdiff --git a/src/main/java/Coin.java b/src/main/java/ModelController/Coin.java[m
+[1msimilarity index 86%[m
+[1mrename from src/main/java/Coin.java[m
+[1mrename to src/main/java/ModelController/Coin.java[m
+[1mindex 470274c..b09f99a 100644[m
+[1m--- a/src/main/java/Coin.java[m
+[1m+++ b/src/main/java/ModelController/Coin.java[m
+[36m@@ -1,12 +1,10 @@[m
+[32m+[m[32mpackage ModelController;[m
+[32m+[m
+ import com.googlecode.lanterna.TerminalPosition;[m
+ import com.googlecode.lanterna.TextColor;[m
+ import com.googlecode.lanterna.graphics.TextGraphics;[m
+ [m
+[31m-import java.util.ArrayList;[m
+[31m-import java.util.List;[m
+[31m-import java.util.Random;[m
+[31m-[m
+[31m-public class Coin extends Element{[m
+[32m+[m[32mpublic class Coin extends Element {[m
+     private int width;[m
+     private int height;[m
+ [m
+[1mdiff --git a/src/main/java/Element.java b/src/main/java/ModelController/Element.java[m
+[1msimilarity index 88%[m
+[1mrename from src/main/java/Element.java[m
+[1mrename to src/main/java/ModelController/Element.java[m
+[1mindex df87186..35cce29 100644[m
+[1m--- a/src/main/java/Element.java[m
+[1m+++ b/src/main/java/ModelController/Element.java[m
+[36m@@ -1,14 +1,15 @@[m
+[32m+[m[32mpackage ModelController;[m
+[32m+[m
+ import com.googlecode.lanterna.graphics.TextGraphics;[m
+ [m
+[32m+[m
+ public abstract class Element {[m
+     private Position position;[m
+     public Element(int x, int y){[m
+         position = new Position(x,y);[m
+     }[m
+     public Position getPosition(){ return position; }[m
+[31m-    public void setPosition(Position pos){[m
+[31m-        this.position = pos;[m
+[31m-    }[m
+[32m+[m[32m    public void setPosition(Position pos){this.position = pos;}[m
+     public void draw(TextGraphics screen){}[m
+ [m
+     public Position moveUp() { return new Position(position.getX(), position.getY() - 1);}[m
+[1mdiff --git a/src/main/java/Game.java b/src/main/java/ModelController/Game.java[m
+[1msimilarity index 96%[m
+[1mrename from src/main/java/Game.java[m
+[1mrename to src/main/java/ModelController/Game.java[m
+[1mindex cf724ec..a7894ae 100644[m
+[1m--- a/src/main/java/Game.java[m
+[1m+++ b/src/main/java/ModelController/Game.java[m
+[36m@@ -1,5 +1,8 @@[m
+[32m+[m[32mpackage ModelController;[m
+[32m+[m
+[32m+[m[32mimport ModelController.Arena;[m
+[32m+[m[32mimport ModelController.Position;[m
+ import com.googlecode.lanterna.TerminalSize;[m
+[31m-import com.googlecode.lanterna.TextCharacter;[m
+ import com.googlecode.lanterna.input.KeyStroke;[m
+ import com.googlecode.lanterna.input.KeyType;[m
+ import com.googlecode.lanterna.screen.Screen;[m
+[1mdiff --git a/src/main/java/Hero.java b/src/main/java/ModelController/Hero.java[m
+[1msimilarity index 90%[m
+[1mrename from src/main/java/Hero.java[m
+[1mrename to src/main/java/ModelController/Hero.java[m
+[1mindex 6e98930..af685ca 100644[m
+[1m--- a/src/main/java/Hero.java[m
+[1m+++ b/src/main/java/ModelController/Hero.java[m
+[36m@@ -1,3 +1,6 @@[m
+[32m+[m[32mpackage ModelController;[m
+[32m+[m
+[32m+[m[32mimport ModelController.Element;[m
+ import com.googlecode.lanterna.SGR;[m
+ import com.googlecode.lanterna.TerminalPosition;[m
+ import com.googlecode.lanterna.TextColor;[m
+[1mdiff --git a/src/main/java/Monster.java b/src/main/java/ModelController/Monster.java[m
+[1msimilarity index 91%[m
+[1mrename from src/main/java/Monster.java[m
+[1mrename to src/main/java/ModelController/Monster.java[m
+[1mindex a70866e..ab8b5b9 100644[m
+[1m--- a/src/main/java/Monster.java[m
+[1m+++ b/src/main/java/ModelController/Monster.java[m
+[36m@@ -1,3 +1,6 @@[m
+[32m+[m[32mpackage ModelController;[m
+[32m+[m
+[32m+[m[32mimport ModelController.Element;[m
+ import com.googlecode.lanterna.SGR;[m
+ import com.googlecode.lanterna.TerminalPosition;[m
+ import com.googlecode.lanterna.TextColor;[m
+[36m@@ -5,7 +8,7 @@[m [mimport com.googlecode.lanterna.graphics.TextGraphics;[m
+ [m
+ import java.util.Random;[m
+ [m
+[31m-public class Monster extends Element{[m
+[32m+[m[32mpublic class Monster extends Element {[m
+     private int width;[m
+     private int height;[m
+     Monster(int width, int height) { super (width, height);}[m
+[1mdiff --git a/src/main/java/Position.java b/src/main/java/ModelController/Position.java[m
+[1msimilarity index 62%[m
+[1mrename from src/main/java/Position.java[m
+[1mrename to src/main/java/ModelController/Position.java[m
+[1mindex 36c4bae..09734fc 100644[m
+[1m--- a/src/main/java/Position.java[m
+[1m+++ b/src/main/java/ModelController/Position.java[m
+[36m@@ -1,3 +1,5 @@[m
+[32m+[m[32mpackage ModelController;[m
+[32m+[m
+ public class Position {[m
+     private int x; // width[m
+     private int y; //height[m
+[36m@@ -7,6 +9,22 @@[m [mpublic class Position {[m
+         this.y = y;[m
+     }[m
+ [m
+[32m+[m[32m    public Position getLeft() {[m
+[32m+[m[32m        return new Position(x - 1, y);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public Position getRight() {[m
+[32m+[m[32m        return new Position(x + 1, y);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public Position getUp() {[m
+[32m+[m[32m        return new Position(x, y - 1);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public Position getDown() {[m
+[32m+[m[32m        return new Position(x, y + 1);[m
+[32m+[m[32m    }[m
+[32m+[m
+     //Getters[m
+     public int getX(){ return x;}[m
+     public int getY(){ return y;}[m
+[1mdiff --git a/src/main/java/Wall.java b/src/main/java/ModelController/Wall.java[m
+[1msimilarity index 84%[m
+[1mrename from src/main/java/Wall.java[m
+[1mrename to src/main/java/ModelController/Wall.java[m
+[1mindex b37d865..5be9535 100644[m
+[1m--- a/src/main/java/Wall.java[m
+[1m+++ b/src/main/java/ModelController/Wall.java[m
+[36m@@ -1,11 +1,10 @@[m
+[31m-import com.googlecode.lanterna.SGR;[m
+[32m+[m[32mpackage ModelController;[m
+[32m+[m
+[32m+[m[32mimport ModelController.Element;[m
+ import com.googlecode.lanterna.TerminalPosition;[m
+ import com.googlecode.lanterna.TextColor;[m
+ import com.googlecode.lanterna.graphics.TextGraphics;[m
+ [m
+[31m-import java.util.ArrayList;[m
+[31m-import java.util.List;[m
+[31m-[m
+ public class Wall extends Element {[m
+ [m
+     public Wall(int x, int y){[m
+[1mdiff --git a/src/main/java/State/GameState.java b/src/main/java/State/GameState.java[m
+[1mnew file mode 100644[m
+[1mindex 0000000..963efd1[m
+[1m--- /dev/null[m
+[1m+++ b/src/main/java/State/GameState.java[m
+[36m@@ -0,0 +1,20 @@[m
+[32m+[m[32mpackage State;[m
+[32m+[m[32mimport Viewer.arenaViewer;[m
+[32m+[m[32mimport ModelController.Arena;[m
+[32m+[m[32mimport Viewer.Viewer;[m
+[32m+[m
+[32m+[m[32mpublic class GameState extends State<Arena> {[m
+[32m+[m[32m    public GameState(Arena arena) {[m
+[32m+[m[32m        super(arena);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    protected Viewer<Arena> getViewer() {[m
+[32m+[m[32m        return new arenaViewer(getModel());[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    protected Controller<Arena> getController() {[m
+[32m+[m[32m        return new ArenaController(getModel());[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[1mdiff --git a/src/main/java/State/State.java b/src/main/java/State/State.java[m
+[1mnew file mode 100644[m
+[1mindex 0000000..1c39513[m
+[1m--- /dev/null[m
+[1m+++ b/src/main/java/State/State.java[m
+[36m@@ -0,0 +1,33 @@[m
+[32m+[m[32mpackage State;[m
+[32m+[m
+[32m+[m[32mimport Gui.GUI;[m
+[32m+[m[32mimport ModelController.Game;[m
+[32m+[m[32mimport Viewer.Viewer;[m
+[32m+[m
+[32m+[m[32mimport java.io.IOException;[m
+[32m+[m
+[32m+[m[32mpublic abstract class State<T> {[m
+[32m+[m[32m    private final T model;[m
+[32m+[m[32m    private final Controller<T> controller;[m
+[32m+[m[32m    private final Viewer<T> viewer;[m
+[32m+[m
+[32m+[m[32m    public State(T model) {[m
+[32m+[m[32m        this.model = model;[m
+[32m+[m[32m        this.viewer = getViewer();[m
+[32m+[m[32m        this.controller = getController();[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    protected abstract Viewer<T> getViewer();[m
+[32m+[m
+[32m+[m[32m    protected abstract Controller<T> getController();[m
+[32m+[m
+[32m+[m[32m    public T getModel() {[m
+[32m+[m[32m        return model;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public void step(Game game, GUI gui, long time) throws IOException {[m
+[32m+[m[32m        GUI.ACTION action = gui.getNextAction();[m
+[32m+[m[32m        controller.step(game, action, time);[m
+[32m+[m[32m        viewer.draw(gui);[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[1mdiff --git a/src/main/j

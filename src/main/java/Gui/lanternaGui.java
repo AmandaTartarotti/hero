@@ -21,7 +21,7 @@ public class lanternaGui implements GUI {
         this.screen = screen;
     }
 
-    public void LanternaGUI(int width, int height) throws IOException{
+    public void lanternaGUI(int width, int height) throws IOException{
         Terminal terminal = createTerminal(width, height);
         this.screen = createScreen(terminal);
     }

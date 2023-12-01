@@ -1,5 +1,7 @@
 package State;
 import Viewer.arenaViewer;
+import Controller.ArenaController;
+import Controller.Controller;
 import ModelController.Arena;
 import Viewer.Viewer;
 

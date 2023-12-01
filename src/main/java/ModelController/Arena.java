@@ -136,6 +136,19 @@ public class Arena {
                 (position.getY() >= 1 && position.getY() < (height - 1));
     }
 
+    public boolean isEmpty(Position position) {
+        for (Wall wall : walls)
+            if (wall.getPosition().equals(position))
+                return false;
+        return true;
+    }
+
+    public boolean isMonster(Position position) {
+        for (Monster monster : monsters)
+            if (monster.getPosition().equals(position))
+                return true;
+        return false;
+    }
 
 
     public void moveMonsters(){

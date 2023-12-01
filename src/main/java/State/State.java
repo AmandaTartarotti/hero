@@ -1,5 +1,6 @@
 package State;
 
+import Controller.Controller;
 import Gui.GUI;
 import ModelController.Game;
 import Viewer.Viewer;
